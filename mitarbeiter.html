@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firmen Dashboard - Produktivsystem</title>
+  <style>
+    :root {
+      --primary: #e91e63;
+      --primary-hover: #ff4081;
+      --bg-dark: #0f0f0f;
+      --bg-medium: #1a1a1a;
+      --bg-light: #2c2c2c;
+      --text: #fff;
+      --border: #333;
+    }
+    
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, var(--bg-dark), var(--bg-medium));
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .dashboard {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 250px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 20px;
+      border-right: 1px solid var(--border);
+    }
+
+    .company-header {
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    .nav-item {
+      padding: 10px 0;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .nav-item:hover {
+      color: var(--primary);
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 30px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .stats-card {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      width: 200px;
+    }
+
+    .stats-number {
+      font-size: 48px;
+      font-weight: bold;
+      color: var(--primary);
+      margin: 10px 0;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-light);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background-color: #3c3c3c;
+    }
+
+    /* Modal Stile */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: var(--bg-medium);
+      padding: 30px;
+      border-radius: 12px;
+      width: 500px;
+      max-width: 90%;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .close-modal {
+      float: right;
+      cursor: pointer;
+      font-size: 24px;
+    }
+
+    /* Formular Stile */
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .form-group input, 
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      background-color: var(--bg-light);
+      color: var(--text);
+    }
+
+    /* Mitarbeiter Tabelle */
+    .employees-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .employees-table th, 
+    .employees-table td {
+      padding: 15px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .employees-table th {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Rollen-spezifische Farben */
+    .role-admin { color: #f44336; }
+    .role-manager { color: #9c27b0; }
+    .role-dj { color: #3f51b5; }
+    .role-techniker { color: #009688; }
+    .role-lkw { color: #ff9800; }
+    .role-event { color: #4caf50; }
+    .role-finanz { color: #607d8b; }
+    .role-essen { color: #795548; }
+    .role-planung { color: #2196f3; }
+
+    /* Aktionen */
+    .action-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 5px;
+      font-size: 12px;
+    }
+
+    .btn-info {
+      background-color: #2196F3;
+      color: white;
+    }
+
+    .btn-chat {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    /* Mitarbeiter Details */
+    .employee-details {
+      display: none;
+      margin-top: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    /* Module */
+    .module {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    .module-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: var(--primary);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .dashboard {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+      }
+      .header {
+        flex-direction: column;
+        gap: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <div class="sidebar">
+      <div class="company-header">
+        <h2 id="company-name">Beispiel GmbH</h2>
+        <div id="company-plan">Basis Plan (50 Mitarbeiter)</div>
+      </div>
+      
+      <div class="nav-item" onclick="showSection('dashboard')">Dashboard</div>
+      <div class="nav-item" onclick="showSection('employees')">Mitarbeiter</div>
+      <div class="nav-item" onclick="showSection('events')">Eventplanung</div>
+      <div class="nav-item" onclick="showSection('finances')">Finanzmanagement</div>
+      <div class="nav-item" onclick="showSection('settings')">Einstellungen</div>
+      <div class="nav-item" onclick="logout()">Abmelden</div>
+    </div>
+
+    <div class="main-content">
+      <!-- Dashboard Header -->
+      <div class="header">
+        <div class="stats-card">
+          <div>Aktive Mitarbeiter</div>
+          <div class="stats-number" id="active-employees">0</div>
+          <div id="employee-limit">von 50 verfügbaren</div>
+        </div>
+
+        <div class="button-group">
+          <button class="btn btn-primary" id="premium-btn">Premium Version</button>
+          <button class="btn btn-secondary" id="add-employee-btn">Mitarbeiter hinzufügen</button>
+        </div>
+      </div>
+
+      <!-- Mitarbeiterliste -->
+      <div id="employees-section">
+        <h3>Mitarbeiterliste</h3>
+        <table class="employees-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>E-Mail</th>
+              <th>Rolle</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody id="employees-list">
+            <!-- Wird dynamisch befüllt -->
+          </tbody>
+        </table>
+
+        <div class="employee-details" id="employee-details">
+          <h4>Details zu <span id="detail-name"></span></h4>
+          
+          <div class="module">
+            <div class="module-title">Letztes Event</div>
+            <div id="last-event">Keine Daten verfügbar</div>
+          </div>
+          
+          <div class="module">
+            <div class="module-title">Status</div>
+            <div id="employee-status">Unbekannt</div>
+          </div>
+          
+          <div class="module">
+            <div class="module-title">Qualifikationen</div>
+            <div id="employee-qualifications">Lädt...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modale Dialoge -->
+  <div class="modal" id="add-employee-modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal()">&times;</span>
+      <h3>Mitarbeiter hinzufügen</h3>
+      <form id="add-employee-form">
+        <div class="form-group">
+          <label for="employee-name">Vollständiger Name</label>
+          <input type="text" id="employee-name" required>
+        </div>
+        <div class="form-group">
+          <label for="employee-email">E-Mail-Adresse</label>
+          <input type="email" id="employee-email" required>
+        </div>
+        <div class="form-group">
+          <label for="employee-role">Rolle</label>
+          <select id="employee-role" required>
+            <option value="admin">Admin (voller Zugriff)</option>
+            <option value="manager">Manager (Teamleitung)</option>
+            <option value="dj">DJ (Musikverantwortung)</option>
+            <option value="techniker">Techniker (Equipment)</option>
+            <option value="lkw">LKW-Fahrer (Transport)</option>
+            <option value="event">Büro Eventmanagement</option>
+            <option value="finanz">Büro Finanzmanagement</option>
+            <option value="essen">Büro Essenskoordination</option>
+            <option value="planung">Büro Gesamtplanung</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Einladung senden</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="premium-modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal()">&times;</span>
+      <h3>Premium Version</h3>
+      <p>Upgrade auf die Premium-Version für erweiterte Funktionen:</p>
+      <ul>
+        <li>Bis zu 200 Mitarbeiter</li>
+        <li>Erweiterte Analytics</li>
+        <li>Priorisierter Support</li>
+        <li>API-Zugriff</li>
+        <li>Custom Module</li>
+      </ul>
+      <button class="btn btn-primary" onclick="upgradeToPremium()">Jetzt upgraden (50€/Monat)</button>
+    </div>
+  </div>
+
+  <script>
+    // Globale Variablen
+    let employees = [];
+    let companyData = {
+      name: "Event Professionals GmbH",
+      plan: "basic",
+      employeeLimit: 50
+    };
+
+    // Initialisierung beim Laden
+    document.addEventListener('DOMContentLoaded', function() {
+      loadCompanyData();
+      loadEmployees();
+      setupEventListeners();
+    });
+
+    // Firmendaten laden
+    function loadCompanyData() {
+      document.getElementById('company-name').textContent = companyData.name;
+      document.getElementById('company-plan').textContent = 
+        companyData.plan === 'premium' ? 'Premium Plan (200 Mitarbeiter)' : 'Basis Plan (50 Mitarbeiter)';
+      document.getElementById('employee-limit').textContent = 
+        `von ${companyData.employeeLimit} verfügbaren`;
+    }
+
+    // Mitarbeiterdaten laden (simuliert API-Aufruf)
+    function loadEmployees() {
+      // Simulierte Daten - in der Praxis API-Aufruf
+      employees = [
+        { id: 1, name: "Max Mustermann", email: "max@eventpro.de", role: "admin", lastEvent: "Großevent München (15.05.2023)", status: "Aktiv", qualifications: "DJ-Lizenz, LKW-Führerschein" },
+        { id: 2, name: "Erika Musterfrau", email: "erika@eventpro.de", role: "manager", lastEvent: "Hochzeit Berlin (12.05.2023)", status: "Aktiv", qualifications: "Eventmanagement-Zertifikat" },
+        { id: 3, name: "DJ Soundmaster", email: "dj@eventpro.de", role: "dj", lastEvent: "Clubnacht Hamburg (10.05.2023)", status: "Verfügbar", qualifications: "Ableton Certified, Beatmatching" },
+        { id: 4, name: "Technik Toni", email: "toni@eventpro.de", role: "techniker", lastEvent: "Konzertsetup Köln (08.05.2023)", status: "Im Einsatz", qualifications: "Lichttechnik, PA-Systeme" },
+        { id: 5, name: "Fahrer Franz", email: "franz@eventpro.de", role: "lkw", lastEvent: "Equipment-Transport (05.05.2023)", status: "Verfügbar", qualifications: "LKW-Führerschein C/CE" }
+      ];
+      
+      renderEmployeeList();
+      document.getElementById('active-employees').textContent = employees.length;
+    }
+
+    // Mitarbeiterliste rendern
+    function renderEmployeeList() {
+      const tbody = document.getElementById('employees-list');
+      tbody.innerHTML = '';
+      
+      employees.forEach(employee => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${employee.name}</td>
+          <td>${employee.email}</td>
+          <td>
+            <select class="role-select" data-id="${employee.id}" onchange="updateRole(${employee.id}, this.value)">
+              <option value="admin" ${employee.role === 'admin' ? 'selected' : ''}>Admin</option>
+              <option value="manager" ${employee.role === 'manager' ? 'selected' : ''}>Manager</option>
+              <option value="dj" ${employee.role === 'dj' ? 'selected' : ''}>DJ</option>
+              <option value="techniker" ${employee.role === 'techniker' ? 'selected' : ''}>Techniker</option>
+              <option value="lkw" ${employee.role === 'lkw' ? 'selected' : ''}>LKW-Fahrer</option>
+              <option value="event" ${employee.role === 'event' ? 'selected' : ''}>Eventmanagement</option>
+              <option value="finanz" ${employee.role === 'finanz' ? 'selected' : ''}>Finanzmanagement</option>
+              <option value="essen" ${employee.role === 'essen' ? 'selected' : ''}>Essenskoordination</option>
+              <option value="planung" ${employee.role === 'planung' ? 'selected' : ''}>Gesamtplanung</option>
+            </select>
+          </td>
+          <td>
+            <button class="action-btn btn-info" onclick="showEmployeeDetails(${employee.id})">Details</button>
+            <button class="action-btn btn-chat" onclick="startChat('${employee.email}')">Chat</button>
+          </td>
+        `;
+        
+        // Rolle farblich markieren
+        const roleSelect = row.querySelector('.role-select');
+        roleSelect.className = `role-select role-${employee.role}`;
+        
+        tbody.appendChild(row);
+      });
+    }
+
+    // Event Listener einrichten
+    function setupEventListeners() {
+      // Mitarbeiter hinzufügen Modal
+      document.getElementById('add-employee-btn').addEventListener('click', function() {
+        document.getElementById('add-employee-modal').style.display = 'flex';
+      });
+
+      // Premium Modal
+      document.getElementById('premium-btn').addEventListener('click', function() {
+        document.getElementById('premium-modal').style.display = 'flex';
+      });
+
+      // Mitarbeiter hinzufügen Formular
+      document.getElementById('add-employee-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const name = document.getElementById('employee-name').value;
+        const email = document.getElementById('employee-email').value;
+        const role = document.getElementById('employee-role').value;
+        
+        // In der Praxis: API-Aufruf zum Erstellen des Mitarbeiters
+        const newEmployee = {
+          id: employees.length + 1,
+          name,
+          email,
+          role,
+          lastEvent: "Noch kein Event",
+          status: "Eingeladen",
+          qualifications: "In Einarbeitung"
+        };
+        
+        employees.push(newEmployee);
+        renderEmployeeList();
+        document.getElementById('active-employees').textContent = employees.length;
+        
+        alert(`Einladung wurde an ${email} gesendet (Rolle: ${getRoleName(role)})`);
+        closeModal();
+        this.reset();
+      });
+    }
+
+    // Hilfsfunktion: Rollennamen anzeigen
+    function getRoleName(roleKey) {
+      const roles = {
+        'admin': 'Admin',
+        'manager': 'Manager',
+        'dj': 'DJ',
+        'techniker': 'Techniker',
+        'lkw': 'LKW-Fahrer',
+        'event': 'Eventmanagement',
+        'finanz': 'Finanzmanagement',
+        'essen': 'Essenskoordination',
+        'planung': 'Gesamtplanung'
+      };
+      return roles[roleKey] || roleKey;
+    }
+
+    // Rollen aktualisieren
+    function updateRole(employeeId, newRole) {
+      const employee = employees.find(e => e.id === employeeId);
+      if (employee) {
+        employee.role = newRole;
+        // In der Praxis: API-Aufruf zum Speichern
+        console.log(`Rolle für ${employee.name} auf ${newRole} geändert`);
+      }
+    }
+
+    // Mitarbeiterdetails anzeigen
+    function showEmployeeDetails(employeeId) {
+      const employee = employees.find(e => e.id === employeeId);
+      if (employee) {
+        document.getElementById('detail-name').textContent = employee.name;
+        document.getElementById('last-event').textContent = employee.lastEvent;
+        document.getElementById('employee-status').textContent = employee.status;
+        document.getElementById('employee-qualifications').textContent = employee.qualifications;
+        document.getElementById('employee-details').style.display = 'block';
+      }
+    }
+
+    // Chat starten
+    function startChat(email) {
+      alert(`Chat wird gestartet mit: ${email}`);
+      // In der Praxis: Chat-Fenster öffnen
+    }
+
+    // Premium-Upgrade
+    function upgradeToPremium() {
+      companyData.plan = 'premium';
+      companyData.employeeLimit = 200;
+      loadCompanyData();
+      alert('Upgrade auf Premium erfolgreich!');
+      closeModal();
+    }
+
+    // Modal schließen
+    function closeModal() {
+      document.querySelectorAll('.modal').forEach(modal => {
+        modal.style.display = 'none';
+      });
+    }
+
+    // Sektionen anzeigen
+    function showSection(sectionId) {
+      alert(`Wechsel zu ${sectionId} - in der Praxis würde hier der Inhalt ausgetauscht`);
+    }
+
+    // Logout
+    function logout() {
+      if (confirm('Wirklich abmelden?')) {
+        window.location.href = 'login.html';
+      }
+    }
+  </script>
+    <!-- Sidebar Menü -->
+<div class="sidebar" id="mySidebar">
+  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+  <h2>Startmenü</h2>
+  <a href="index.html">Home</a>
+  <a href="kiagentfro.html">event planung</a>
+  <a href="mitarbeiter.html">mitarbeiter</a>
+  <a href="kalender.html">kalender</a>
+  <a href="musikplan.html">musikplan</a>
+  <a href="event plan.html">finazen</a>
+  </div>
+  
+  <!-- Hauptbereich der Seite -->
+  <div id="main">
+  <!-- Button um das Menü zu öffnen -->
+  <span class="openbtn" onclick="openNav()">&#9776; Menü</span>
+  
+  
+  
+  <script>
+  // Funktion um das Menü zu öffnen
+  function openNav() {
+    document.getElementById("mySidebar").style.width = "250px"; // Menü auf 250px erweitern
+    document.getElementById("main").style.marginLeft = "250px"; // Inhalt verschieben
+  }
+  
+  // Funktion um das Menü zu schließen
+  function closeNav() {
+    document.getElementById("mySidebar").style.width = "0"; // Menü schließen
+    document.getElementById("main").style.marginLeft = "0"; // Inhalt zurücksetzen
+  }
+  </script>
+  <style>
+  /* Setze grundlegende Styles zurück */
+  * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  }
+  
+  
+  
+  /* Die Sidebar (Menü) */
+  .sidebar {
+  height: 100%;
+  width: 0; /* Startbreite: 0 */
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  transition: 0.5s;
+  padding-top: 60px;
+  }
+  
+  .sidebar a {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: white;
+  display: block;
+  transition: 0.3s;
+  }
+  
+  .sidebar a:hover {
+  color: #f1f1f1;
+  }
+  
+  /* "Schließen"-Button */
+  .sidebar .closebtn {
+  position: absolute;
+  top: 0;
+  right: 25px;
+  font-size: 36px;
+  color: white;
+  }
+  
+  /* Hauptbereich der Seite */
+  #main {
+  transition: margin-left .5s;
+  padding: 16px;
+  }
+  
+  /* Button um das Menü zu öffnen */
+  .openbtn {
+  font-size: 30px;
+  cursor: pointer;
+  background-color: #111;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  text-align: center;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 2;
+  }
+  
+  .openbtn:hover {
+  background-color: #444;
+  }
+  
+  
+  </style>
+</body>
+</html>

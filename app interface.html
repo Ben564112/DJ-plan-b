@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>app</title>
+</head>
+<style>
+*{
+    background-color: rgb(7, 7, 7);
+}
+h1{
+    color: #ef08fb;
+    margin-left: 500px;
+}
+img{
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+    margin-left: 800px;
+}
+button{
+   background-color:  #ef08fb;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 10px;
+    position: absolute;
+    margin-left: 1000px;
+    margin-top: 50px;
+}
+
+
+
+select {
+    padding: 10px;
+    font-size: 16px;
+    margin: 5px;
+    color: #e21515;
+}
+
+.version-select {
+    display: none;
+    margin-top: 10px;
+    color:  #ef08fb;
+}
+
+.container {
+    width: 300px;
+    color:#ef08fb;
+}
+
+.result {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    color:  #ef08fb;
+}
+
+h6{
+    color:  #ef08fb;
+    margin-top: 200px;
+ 
+}
+h1{ 
+    color:  #ef08fb;
+}
+h2{ 
+    color:  #ef08fb;
+}
+h3{ 
+    color:  #ef08fb;
+}
+</style>
+<body>
+    <h1>Unsere App</h1>
+
+ <div class="app-icon">
+    <img src="" class="app icon" alt="app-icon">
+ </div>
+
+ <!-- Accent-colored raised button with ripple -->
+<button class="mdl-buetton mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
+    download
+  </button>
+  
+  <div class="container">
+      <label for="os">wähle eine app </label>
+      <select id="os">
+          <option value="windows">dj plan b organising </option>
+          <option value="macos">liefer and lader</option>
+          <option value="linux">dj plan b dj'S</option>
+      </select>
+  
+      <div class="version-select" id="windows-version">
+          <label for="windows-version-select">app betriebs system wählen :</label>
+          <select id="windows-version-select">
+              <option value="">windows</option>
+              <option value="">linux</option>
+              <option value="">mac</option>
+          </select>
+      </div>
+  
+      <div class="version-select" id="macos-version">
+          <label for="macos-version-select">Betriebssystem</label>
+          <select id="macos-version-select">
+              <option value="">version :</option>
+              <option>linux</option>
+              <option>windows</option>
+              <option>macos</option>
+          </select>
+      </div>
+  
+      <div class="version-select" id="linux-version">
+          <label for="linux-version-select">Betriebssystem</label>
+          <select id="linux-version-select">
+              <option>linux</option>
+              <option>windows</option>
+              <option>macos</option>
+          </select>
+      </div>
+  
+      <div class="result" id="selected-version">
+          <p>Gewählte Version: </p>
+      </div>
+  </div>
+  
+  <script>
+      const osSelect = document.getElementById('os');
+      const windowsVersionSelect = document.getElementById('windows-version');
+      const macosVersionSelect = document.getElementById('macos-version');
+      const linuxVersionSelect = document.getElementById('linux-version');
+      const selectedVersionDiv = document.getElementById('selected-version');
+
+      const osandversions =  {
+        "linux": [
+            "Fedora",
+            "Debian based"
+        ],
+        "windows": [
+            "Windows 11"
+        ],
+        "darwin": [
+            "Big Sur",
+            "Monterey",
+            "Sonoma"
+        ]
+      }
+  
+      osSelect.addEventListener('change', function() {
+          // Alle Versionen ausblenden
+          windowsVersionSelect.style.display = 'none';
+          macosVersionSelect.style.display = 'none';
+          linuxVersionSelect.style.display = 'none';
+          selectedVersionDiv.innerHTML = '<p>Gewählte Version: </p>';
+  
+          const os = osSelect.value;
+          
+          if (os === 'windows') {
+              windowsVersionSelect.style.display = 'block';
+          } else if (os === 'macos') {
+              macosVersionSelect.style.display = 'block';
+          } else if (os === 'linux') {
+              linuxVersionSelect.style.display = 'block';
+          }
+      });
+  
+      // Für jede Version ein Event hinzufügen
+      document.getElementById('windows-version-select').addEventListener('change', function() {
+          const version = this.value;
+          selectedVersionDiv.innerHTML = `<p>Gewählte Version:  dj plan b organising   ${version}  </p>`;
+      });
+  
+      document.getElementById('macos-version-select').addEventListener('change', function() {
+          const version = this.value;
+          selectedVersionDiv.innerHTML = `<p>Gewählte Version: liefer and lader ${version}  </p>`;
+      });
+  
+      document.getElementById('linux-version-select').addEventListener('change', function() {
+          const version = this.value;
+          selectedVersionDiv.innerHTML = `<p>Gewählte Version: dj plan b dj'S ${version}  </p>`;
+      })
+  </script>
+  
+  
+
+<!-- <h6>_____________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________</h6> -->
+<hr style="border-color:#ef08fb">
+
+
+<div class="text zur app">
+  <h1>Die passende App zur Website</h1> 
+  <h2>was wir bieten</h2> 
+  <h3>- Bessere Verwaltung der Mitarbeiter </h3> 
+  <h3>- Dj Live feedback </h3> 
+
+</div>
+
+
+</body>
+</html>

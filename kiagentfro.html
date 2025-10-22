@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eventplanungs-KI</title>
+<style>
+body { margin:0; font-family:sans-serif; background:#000; color:#ef08fb; display:flex; flex-direction:column; height:100vh; }
+h1 { text-align:center; margin:10px 0; }
+.chat-container { flex:1; display:flex; flex-direction:column; padding:10px; overflow-y:auto; position:relative; }
+.chat-output { flex:1; padding:10px; border:1px solid #444; margin-bottom:10px; overflow-y:auto; background:#111; border-radius:10px; }
+.input-container { display:flex; align-items:center; justify-content:space-between; }
+textarea { flex:1; height:50px; resize:none; background:#1a1a1a; color:#ef08fb; border:none; border-radius:12px; padding:10px; font-size:16px; }
+button { margin-left:10px; padding:8px 12px; border:none; border-radius:8px; background:#ccc; color:#000; cursor:pointer; font-size:14px; }
+button:hover { background:#aaa; }
+#lagerModeContainer { position:absolute; top:10px; right:10px; display:flex; align-items:center; color:#ef08fb; font-size:14px; }
+#lagerMode { margin-left:5px; }
+</style>
+
+ <style>
+    /* Setze grundlegende Styles zurück */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+
+    /* Die Sidebar (Menü) */
+    .sidebar {
+      height: 100%;
+      width: 0;
+      /* Startbreite: 0 */
+      position: fixed;
+      z-index: 1;
+      top: 0;
+      left: 0;
+      background-color: #111;
+      overflow-x: hidden;
+      transition: 0.5s;
+      padding-top: 60px;
+    }
+
+    .sidebar a {
+      padding: 8px 8px 8px 32px;
+      text-decoration: none;
+      font-size: 25px;
+      color: white;
+      display: block;
+      transition: 0.3s;
+    }
+
+    .sidebar a:hover {
+      color: #f1f1f1;
+    }
+
+    /* "Schließen"-Button */
+    .sidebar .closebtn {
+      position: absolute;
+      top: 0;
+      right: 25px;
+      font-size: 36px;
+      color: white;
+    }
+
+    /* Hauptbereich der Seite */
+    #main {
+      transition: margin-left .5s;
+      padding: 16px;
+    }
+
+    /* Button um das Menü zu öffnen */
+    .openbtn {
+      font-size: 30px;
+      cursor: pointer;
+      background-color: #111;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      text-align: center;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 2;
+    }
+
+    .openbtn:hover {
+      background-color: #444;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Eventplanungs-KI</h1>
+
+<div class="chat-container">
+  <div id="lagerModeContainer">
+    Lagerfunktion
+    <input type="checkbox" id="lagerMode">
+  </div>
+
+  <div class="chat-output" id="chatOutput"></div>
+  <div class="input-container">
+    <textarea id="userInput" placeholder="Schreibe deine Frage..."></textarea>
+    <button onclick="sendMessage()">Senden</button>
+  </div>
+</div>
+
+<script>
+// Backend-Endpunkt für Datenbankabfrage
+const BACKEND_QUERY_DB = '/api/queryDB';
+
+// Chat- und Eventkontext
+let chatContext = [];
+let eventData = {};
+
+// Sprachlogik: Nutzer-Sprache erkennen (de/en)
+function detectLanguage(text){
+  // sehr einfache Erkennung anhand der ersten Wörter
+  const deKeywords = ['ich','bitte','hallo','wo','wie'];
+  const enKeywords = ['i','please','hello','where','how'];
+  const lower = text.toLowerCase();
+  if(deKeywords.some(k=>lower.includes(k))) return 'de';
+  if(enKeywords.some(k=>lower.includes(k))) return 'en';
+  return 'de'; // default deutsch
+}
+
+// Übersetzungslogik
+function translate(text, from, to){
+  // Placeholder, später Backend-API möglich
+  if(from===to) return text;
+  // Einfache Mock-Übersetzung
+  return `[${to}] ${text}`;
+}
+
+// ML-Logik im Frontend
+async function mlProcess(userText){
+  // 1. Schlagwörter extrahieren (sehr einfach)
+  const keywords = userText.match(/\b(\w{3,})\b/g) || [];
+
+  // 2. Schlagwörter an Backend schicken
+  try {
+    const resp = await fetch(BACKEND_QUERY_DB,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({keywords, context: chatContext, eventData})
+    });
+    const data = await resp.json();
+    const dbResults = data.results || [];
+
+    // 3. Antwort generieren
+    let answer = '';
+    if(dbResults.length>0){
+      answer = 'Ich habe folgende Infos gefunden: '+dbResults.join(', ');
+    } else {
+      answer = 'Ich konnte keine passenden Infos finden, aber wir können weitermachen.';
+    }
+
+    // 4. Zusatzfrage ergänzen
+    answer += ' Gibt es noch weitere Fragen?';
+
+    // 5. Sprachlogik
+    const lang = detectLanguage(userText);
+    const translated = translate(answer,'de', lang);
+
+    return translated;
+
+  } catch(err){
+    console.error('Backend-Fehler',err);
+    return 'Fehler beim Abrufen der Daten. Bitte erneut versuchen.';
+  }
+}
+
+// Nutzer-Nachricht senden
+async function sendMessage(){
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if(!text) return;
+
+  addUserMessage(text);
+  chatContext.push({role:'user', content:text});
+
+  const mlAnswer = await mlProcess(text);
+
+  addBotMessage(mlAnswer);
+  chatContext.push({role:'ai', content:mlAnswer});
+
+  input.value='';
+  document.getElementById('chatOutput').scrollTop = document.getElementById('chatOutput').scrollHeight;
+}
+
+// Anzeige-Funktionen
+function addUserMessage(text){
+  const output = document.getElementById('chatOutput');
+  const div = document.createElement('div');
+  div.textContent = 'Du: ' + text;
+  output.appendChild(div);
+}
+function addBotMessage(text){
+  const output = document.getElementById('chatOutput');
+  const div = document.createElement('div');
+  div.textContent = 'KI: ' + text;
+  output.appendChild(div);
+}
+
+// Begrüßung
+window.onload = ()=>{
+  addBotMessage('Hallo! Ich helfe dir bei der Eventplanung. Sag mir, was du planen möchtest.');
+};
+</script>
+
+  <!-- Sidebar Menü -->
+  <div class="sidebar" id="mySidebar">
+    <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+    <h2>Startmenü</h2>
+    <a href="index.html">Home</a>
+    <a href="kiagentfro.html">event planung</a>
+    <a href="mitarbeiter.html">mitarbeiter</a>
+    <a href="kalender.html">kalender</a>
+    <a href="musikplan.html">musikplan</a>
+    <a href="event plan.html">finazen</a>
+  </div>
+
+  <!-- Hauptbereich der Seite -->
+  <div id="main">
+    <!-- Button um das Menü zu öffnen -->
+    <span class="openbtn" onclick="openNav()">&#9776; Menü</span>
+
+
+    <script>
+      // Funktion um das Menü zu öffnen
+      function openNav() {
+        document.getElementById("mySidebar").style.width = "250px"; // Menü auf 250px erweitern
+        document.getElementById("main").style.marginLeft = "250px"; // Inhalt verschieben
+      }
+
+      // Funktion um das Menü zu schließen
+      function closeNav() {
+        document.getElementById("mySidebar").style.width = "0"; // Menü schließen
+        document.getElementById("main").style.marginLeft = "0"; // Inhalt zurücksetzen
+      }
+    </script>
+</body>
+</html>
+
+  

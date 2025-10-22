@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Scroll Effekt mit Streifen und Anmeldebutton</title>
+  <style type="text/css">
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body,
+    html {
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      margin: 0;
+    }
+
+    .background-container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .background-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 110%;
+      object-fit: cover;
+      transform: translateZ(-1px) scale(1.0);
+      /* Scale auf 1.0 gesetzt */
+      will-change: transform;
+    }
+
+    .content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 1;
+    }
+
+    /* Textgestaltung */
+    h1 {
+      font-size: 4rem;
+      position: relative;
+      color: white;
+    }
+
+    /* Streifen hinter den Buchstaben */
+    .letter {
+      position: relative;
+      display: inline-block;
+      margin: 0 0.1rem;
+    }
+
+    .letter::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0));
+      background-repeat: no-repeat;
+      background-size: 100% 10%;
+      z-index: -1;
+      animation: moveStripes 1s linear infinite;
+    }
+
+    /* Animation für Streifen hinter dem Text */
+    @keyframes moveStripes {
+      0% {
+        transform: translateY(0);
+      }
+
+      100% {
+        transform: translateY(10px);
+      }
+    }
+
+    /* Parallax-Effekt */
+    body {
+      height: 200vh;
+      overflow-x: hidden;
+    }
+
+    body:hover h1 {
+      transform: perspective(500px) rotateX(10deg) rotateY(10deg);
+    }
+
+    body {
+      perspective: 1000px;
+    }
+    /* Text unter bild auf hauptseite*/
+    h2,
+    h3,
+    h4,
+    h5{
+      color: aquamarine;
+      margin-left: 500px;
+    }
+    /* button für app bereich */
+    button{
+      color: rgb(0, 0, 0);
+      background-color: aquamarine;
+      margin-left: 500px; 
+    }
+   
+
+    /* Schwarzer Bereich unter dem Bild */
+    .black-background {
+      background-color: black;
+      height: 2000px; 
+      width: 100%; 
+      backface-visibility: hidden;
+    }
+
+    /* Anmeldebutton */
+    .login-button {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-image: url('background-image.jpg');
+      /* Bild als Hintergrund */
+      background-size: cover;
+      color: white;
+      padding: 20px;
+      border-radius: 50%;
+      font-size: 2rem;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 60px;
+      height: 60px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      transition: background-color 0.3s ease, transform 0.3s ease;
+      text-decoration: none;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .login-button:hover {
+      transform: scale(1.1);
+      /* Vergrößert den Button leicht bei Hover */
+    }
+
+    .icon {
+      font-size: 2rem;
+      /* Größe des Icons */
+    }
+
+    /* Button zeigt roten Hintergrund, wenn nicht angemeldet */
+    .login-button:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 0, 0, 0.3);
+      /* Roter Filter */
+      border-radius: 50%;
+      z-index: -1;
+    }
+
+    /* Button zeigt grünen Hintergrund, wenn angemeldet */
+    .login-button.logged-in:before {
+      background: rgba(0, 255, 0, 0.3);
+      /* Grüner Filter */
+    }
+  </style>
+
+  <style>
+    /* Setze grundlegende Styles zurück */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+    }
+
+    /* Die Sidebar (Menü) */
+    .sidebar {
+      height: 100%;
+      width: 0;
+      /* Startbreite: 0 */
+      position: fixed;
+      z-index: 1;
+      top: 0;
+      left: 0;
+      background-color: #111;
+      overflow-x: hidden;
+      transition: 0.5s;
+      padding-top: 60px;
+    }
+
+    .sidebar a {
+      padding: 8px 8px 8px 32px;
+      text-decoration: none;
+      font-size: 25px;
+      color: white;
+      display: block;
+      transition: 0.3s;
+    }
+
+    .sidebar a:hover {
+      color: #f1f1f1;
+    }
+
+    /* "Schließen"-Button */
+    .sidebar .closebtn {
+      position: absolute;
+      top: 0;
+      right: 25px;
+      font-size: 36px;
+      color: white;
+    }
+
+    /* Hauptbereich der Seite */
+    #main {
+      transition: margin-left .5s;
+      padding: 16px;
+    }
+
+    /* Button um das Menü zu öffnen */
+    .openbtn {
+      font-size: 30px;
+      cursor: pointer;
+      background-color: #111;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      text-align: center;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 2;
+    }
+
+    .openbtn:hover {
+      background-color: #444;
+    }
+  </style>
+</head>
+
+<body>
+
+  <section class="background-container">
+    <!-- Hintergrundbild als JPEG -->
+    <img src="96a1d585-3956-4b32-ad86-604fd8d519e5.jpeg" alt="Hintergrundbild" class="background-image">
+    <div class="content">
+      <h1>
+        <span class="letter">D</span>
+        <span class="letter">J</span>
+        <span class="letter"> </span>
+        <span class="letter">P</span>
+        <span class="letter">l</span>
+        <span class="letter">a</span>
+        <span class="letter">n</span>
+        <span class="letter"> </span>
+        <span class="letter">B</span>
+      </h1>
+    </div>
+  </section>
+
+  <!-- Schwarzer Bereich unter dem Bild -->
+  <section class="black-background">
+    <!--text unterm bild auf der hauptseite--> 
+    <div class="textbeschreibung">
+      <h2 class="textbeschreibung"> dj plan b </h2>
+      <h3 class="textbeschreibung"> Was bieten wir für sie:</h3>
+      <h4 class="textbeschreibung">event planung:</h4>
+      <h5 class="textbeschreibung">- Eventplanung kann kompliziert sein. Wir unterstützen Sie!</h5>
+      <h5 class="textbeschreibung">- technik auch kein problem mit dem technikplaner</h5>
+      <h5 class="textbeschreibung">- und wenn sie auftritte haben tragen sie es direkt ein </h5>
+      <h5 class="textbeschreibung">- als dj kompletten durchblick erhalten dank unserer hilfe</h5>
+
+
+      <h4 class="textbeschreibung"> und wenn sie noch mehr wollen:</h4>
+      <h5 class="textbeschreibung">dann hollen sie sich unsere app mehr infos hier klicken ↓</h5>
+      <!-- button zum app bereich-->
+      <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
+        <a href="app interface.html">app bereich</a>
+      </button>
+
+    </div>
+  </section>
+
+  <!-- Anmelde-Button -->
+  <a href="test css.html" class="login-button" id="loginButton">
+    <span class="icon">&#128100;</span> <!-- Mensch-Icon -->
+  </a>
+
+  <script>
+    // Beispielhafte Logik für den Anmeldestatus (true = angemeldet, false = nicht angemeldet)
+    var isLoggedIn = false; // Hier kannst du den Status dynamisch setzen, je nach Login-Status des Benutzers
+
+    var loginButton = document.getElementById("loginButton");
+
+    // Den Button je nach Status farblich anpassen
+    if (isLoggedIn) {
+      loginButton.style.backgroundColor = "green"; // Wenn der Benutzer angemeldet ist, grün
+    } else {
+      loginButton.style.backgroundColor = "red"; // Wenn der Benutzer nicht angemeldet ist, rot
+    }
+  </script>
+
+
+
+
+  <!-- Sidebar Menü -->
+  <div class="sidebar" id="mySidebar">
+    <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+    <h2>Startmenü</h2>
+    <a href="index.html">Home</a>
+    <a href="kiagentfro.html">event planung</a>
+    <a href="mitarbeiter.html">mitarbeiter</a>
+    <a href="kalender.html">kalender</a>
+    <a href="musikplan.html">musikplan</a>
+  </div>
+
+  <!-- Hauptbereich der Seite -->
+  <div id="main">
+    <!-- Button um das Menü zu öffnen -->
+    <span class="openbtn" onclick="openNav()">&#9776; Menü</span>
+
+
+    <script>
+      // Funktion um das Menü zu öffnen
+      function openNav() {
+        document.getElementById("mySidebar").style.width = "250px"; // Menü auf 250px erweitern
+        document.getElementById("main").style.marginLeft = "250px"; // Inhalt verschieben
+      }
+
+      // Funktion um das Menü zu schließen
+      function closeNav() {
+        document.getElementById("mySidebar").style.width = "0"; // Menü schließen
+        document.getElementById("main").style.marginLeft = "0"; // Inhalt zurücksetzen
+      }
+    </script>
+</body>
+
+</html>

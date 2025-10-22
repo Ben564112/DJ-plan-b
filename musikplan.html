@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dukomente Explorer</title>
+<style>
+body {
+  background: black;
+  color: white;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+h1 {
+  color: #ef08fb;
+  text-align: center;
+  margin: 15px 0;
+}
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 10px 20px;
+  background: #111;
+  border-bottom: 1px solid #333;
+  position: relative;
+}
+.menu-button { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+.dropdown {
+  display: none;
+  position: absolute;
+  top: 50px;
+  right: 20px;
+  background: #222;
+  border: 1px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 10;
+}
+.dropdown button {
+  display: block;
+  background: none;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+}
+.dropdown button:hover { background: #333; }
+.container { padding: 20px; }
+.list-view { display: none; }
+.list-item { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #333; cursor: pointer; }
+.list-item span { margin-left: 15px; }
+.grid-view { display: flex; gap: 20px; flex-wrap: wrap; }
+.grid-item { width: 120px; text-align: center; cursor: pointer; padding: 5px; border-radius: 6px; }
+.grid-item img { width: 100px; height: 120px; object-fit: contain; border-radius: 6px; background: #444; }
+.grid-item p { margin-top: 5px; font-size: 14px; color: #ccc; }
+#fileInput { display: none; }
+</style>
+<style>
+        /* Setze grundlegende Styles zurück */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* Die Sidebar (Menü) */
+    .sidebar {
+      height: 100%;
+      width: 0;
+      /* Startbreite: 0 */
+      position: fixed;
+      z-index: 1;
+      top: 0;
+      left: 0;
+      background-color: #111;
+      overflow-x: hidden;
+      transition: 0.5s;
+      padding-top: 60px;
+    }
+
+    .sidebar a {
+      padding: 8px 8px 8px 32px;
+      text-decoration: none;
+      font-size: 25px;
+      color: white;
+      display: block;
+      transition: 0.3s;
+    }
+
+    .sidebar a:hover {
+      color: #f1f1f1;
+    }
+
+    /* "Schließen"-Button */
+    .sidebar .closebtn {
+      position: absolute;
+      top: 0;
+      right: 25px;
+      font-size: 36px;
+      color: rgb(240, 240, 240);
+    }
+
+    /* Hauptbereich der Seite */
+    #main {
+      transition: margin-left .5s;
+      padding: 16px;
+    }
+
+    /* Button um das Menü zu öffnen */
+    .openbtn {
+      font-size: 30px;
+      cursor: pointer;
+      background-color: #111;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      text-align: center;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 2;
+    }
+
+    .openbtn:hover {
+      background-color: #444;
+    }
+  </style>
+</head>
+<body>
+<h1>Dukomente Explorer</h1>
+
+<div class="toolbar">
+  <button class="menu-button">⋮</button>
+  <div class="dropdown" id="dropdown">
+    <button onclick="triggerUpload()">Upload</button>
+    <button onclick="downloadSelected()">Download</button>
+    <button onclick="deleteSelected()">Löschen</button>
+    <button onclick="toggleView()">Ansicht wechseln</button>
+  </div>
+</div>
+
+<input type="file" id="fileInput" multiple>
+
+<div class="container">
+  <div class="grid-view" id="gridView"></div>
+  <div class="list-view" id="listView"></div>
+</div>
+
+<script>
+const menuButton = document.querySelector('.menu-button');
+const dropdown = document.getElementById('dropdown');
+const gridView = document.getElementById('gridView');
+const listView = document.getElementById('listView');
+const fileInput = document.getElementById('fileInput');
+
+let isGrid = true;
+let files = [];
+let selectedFileIndex = null;
+
+menuButton.addEventListener('click', ()=>{ dropdown.style.display = dropdown.style.display==='block'?'none':'block'; });
+function triggerUpload(){ fileInput.click(); dropdown.style.display='none'; }
+fileInput.addEventListener('change', ()=>{ for(let f of fileInput.files){ files.push(f); } render(); });
+
+function downloadSelected(){
+  if(selectedFileIndex===null){ alert("Bitte zuerst eine Datei auswählen."); return; }
+  const file=files[selectedFileIndex];
+  const link=document.createElement("a");
+  link.href=URL.createObjectURL(file);
+  link.download=file.name;
+  link.click();
+  dropdown.style.display='none';
+}
+function deleteSelected(){
+  if(selectedFileIndex===null){ alert("Bitte zuerst eine Datei auswählen."); return; }
+  files.splice(selectedFileIndex,1);
+  selectedFileIndex=null;
+  render();
+  dropdown.style.display='none';
+}
+function toggleView(){ isGrid=!isGrid; render(); dropdown.style.display='none'; }
+
+// Echte Base64-Icons für Offline-Nutzung
+const icons = {
+  pdf: 'data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZGMwMDAwIiB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAzMCAzMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjMwIiBmaWxsPSJyZWQiLz48L3N2Zz4=',
+  doc: 'data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDA3OEFGIiB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAzMCAzMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjMwIiBmaWxsPSIjMDA3OEFGIi8+PC9zdmc+',
+  xls: 'data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDg4RjAwIiB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAzMCAzMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjMwIiBmaWxsPSIjMDg4RjAwIi8+PC9zdmc+',
+  ppt: 'data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjRkQ2MDAwIiB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAzMCAzMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjMwIiBmaWxsPSIjRkQ2MDAwIi8+PC9zdmc+',
+  code: 'data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDBGRkZGIiB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAzMCAzMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjMwIiBmaWxsPSIjMDBGRkZGIi8+PC9zdmc+',
+  file: 'data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjNEM0QzRDIiB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAzMCAzMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjMwIiBmaWxsPSIjNEM0QzRDIi8+PC9zdmc+'
+};
+
+function getIcon(file){
+  const ext=file.name.split('.').pop().toLowerCase();
+  if(['png','jpg','jpeg','gif'].includes(ext)) return URL.createObjectURL(file);
+  if(ext==='pdf') return icons.pdf;
+  if(['doc','docx'].includes(ext)) return icons.doc;
+  if(['xls','xlsx'].includes(ext)) return icons.xls;
+  if(['ppt','pptx'].includes(ext)) return icons.ppt;
+  if(['js','py','html','css','java','c','cpp','ts'].includes(ext)) return icons.code;
+  return icons.file;
+}
+
+function render(){
+  gridView.innerHTML=''; listView.innerHTML='';
+  if(isGrid){
+    gridView.style.display="flex"; listView.style.display="none";
+    files.forEach((file,index)=>{
+      const item=document.createElement("div");
+      item.className="grid-item";
+      const icon=getIcon(file);
+      item.innerHTML=`<img src="${icon}"><p>${file.name}</p>`;
+      item.onclick=()=>{ selectedFileIndex=index; highlight(item); };
+      gridView.appendChild(item);
+    });
+  } else{
+    gridView.style.display="none"; listView.style.display="block";
+    files.forEach((file,index)=>{
+      const item=document.createElement("div");
+      item.className="list-item";
+      const icon=getIcon(file);
+      item.innerHTML=`<img src="${icon}" width="30" height="40"><span>${file.name}</span>`;
+      item.onclick=()=>{ selectedFileIndex=index; highlight(item); };
+      listView.appendChild(item);
+    });
+  }
+}
+
+function highlight(item){
+  document.querySelectorAll(".grid-item,.list-item").forEach(el=>el.style.background="none");
+  item.style.background="#333";
+}
+</script>
+
+  <!-- Sidebar Menü -->
+  <div class="sidebar" id="mySidebar">
+    <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+    <h2>Startmenü</h2>
+    <a href="index.html">Home</a>
+    <a href="kiagentfro.html">event planung</a>
+    <a href="mitarbeiter.html">mitarbeiter</a>
+    <a href="kalender.html">kalender</a>
+    <a href="musikplan.html">musikplan</a>
+    <a href="event plan.html">finazen</a>
+  </div>
+
+  <!-- Hauptbereich der Seite -->
+  <div id="main">
+    <!-- Button um das Menü zu öffnen -->
+    <span class="openbtn" onclick="openNav()">&#9776; Menü</span>
+
+
+    <script>
+      // Funktion um das Menü zu öffnen
+      function openNav() {
+        document.getElementById("mySidebar").style.width = "250px"; // Menü auf 250px erweitern
+        document.getElementById("main").style.marginLeft = "250px"; // Inhalt verschieben
+      }
+
+      // Funktion um das Menü zu schließen
+      function closeNav() {
+        document.getElementById("mySidebar").style.width = "0"; // Menü schließen
+        document.getElementById("main").style.marginLeft = "0"; // Inhalt zurücksetzen
+      }
+    </script>
+</body>
+</html>
+
+
+

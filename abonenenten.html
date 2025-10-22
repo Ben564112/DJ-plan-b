@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+
+#u{
+color:#ff4081;
+margin-left:550px;
+}
+
+body {
+  background-color: #111;
+  font-family: Arial, sans-serif;
+  color: #fff;
+}
+
+.abo-container {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 50px 0;
+}
+
+.abo-box {
+  position: relative;
+  width: 300px;
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+  overflow: visible; /* Rahmen außerhalb zulassen */
+  background: transparent; /* kein Innen-Hintergrund */
+}
+
+/* Animierter Rahmen */
+.abo-box::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border-radius: 18px;
+  border: 3px solid transparent;
+  background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet, red);
+  background-size: 400% 400%;
+  z-index: -1;
+  animation: gradientRotate 10s linear infinite;
+  pointer-events: none; /* verhindert Klick-Probleme */
+}
+
+/* Rahmen nur sichtbar: trick */
+.abo-box::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 15px;
+  background: #111; /* gleiche Farbe wie body */
+  z-index: -1;
+}
+
+@keyframes gradientRotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Titel */
+.abo-title {
+  color: #ffcc00; /* leicht änderbar */
+  margin-bottom: 10px;
+}
+
+/* Ausklappbarer Text */
+.voller-text {
+  display: none;
+  margin-top: 10px;
+}
+
+/* „Mehr lesen“-Link */
+.teaser .mehr-lesen {
+  color: #00ccff;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Button */
+.preis-btn {
+  background-color: #ff9900;
+  border: none;
+  padding: 10px 20px;
+  color: white;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+
+
+
+</style>
+<body>
+<h1 id="u">Abo modele</h1>
+
+<div class="abo-container">
+  <div class="abo-box">
+    <h2 class="abo-title">Basis Version</h2>
+    <h3 class="teaser">Für die Basis Version ...<span class="mehr-lesen">Mehr lesen</span></h3>
+    <div class="voller-text">
+      <p>Hier steht die komplette Beschreibung vom Basis-Abo.</p>
+      <button class="preis-btn" data-preis="9.99">00,00 €</button>
+    </div>
+  </div>
+
+  <div class="abo-box">
+    <h2 class="abo-title">Pro version</h2>
+    <h3 class="teaser">Für die pro Version...<span class="mehr-lesen">Mehr lesen</span></h3>
+    <div class="voller-text">
+      <p> Bekommst du die funktionen:  
+    1. checklisten erstellung von der ki 
+    2. mehr möglichkeiten mit uns zu arbeiten 
+    3. Besseren kundne support
+      </p>
+      <button class="preis-btn" data-preis="19.99"> 9,99€</button>
+    </div>
+  </div>
+
+  <div class="abo-box">
+    <h2 class="abo-title">Firmen Version</h2>
+    <h3 class="teaser">Kurzer Text... <span class="mehr-lesen">Mehr lesen</span></h3>
+    <div class="voller-text">
+      <p>Hier steht die komplette Beschreibung vom Premium-Abo.</p>
+      <button class="preis-btn" data-preis="29.99">500€</button>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+document.querySelectorAll('.mehr-lesen').forEach(el => {
+  el.addEventListener('click', () => {
+    const volleText = el.closest('.abo-box').querySelector('.voller-text');
+    volleText.style.display = volleText.style.display === 'block' ? 'none' : 'block';
+  });
+});
+
+
+
+</script>
+
+
+
+</body>
+</html>
